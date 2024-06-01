@@ -8,7 +8,7 @@ COPY ./requirements.dev.txt /temp/requirements.dev.txt
 COPY ./app /app
 EXPOSE 8000
 
-ARG DEV=true
+ARG DEV=false
 
 RUN pip install --upgrade pip && pip install -r /temp/requirements.txt 
 RUN if [$DEV = "true" ]; then pip install -r /temp/requirements.dev.txt ; fi
