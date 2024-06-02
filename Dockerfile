@@ -2,20 +2,28 @@ FROM python:3.9-alpine3.13
 LABEL maintainer="shabaz"
 
 ENV PYTHONBUFFERED 1
-COPY ./requirements.txt /temp/requirements.txt
-COPY ./requirements.dev.txt /temp/requirements.dev.txt
+COPY ./requirements.txt /tmp/requirements.txt
+COPY ./requirements.dev.txt /tmp/requirements.dev.txt
 
 COPY ./app /app
 EXPOSE 8000
 
 ARG DEV=false
 
-RUN pip install --upgrade pip && pip install -r /temp/requirements.txt 
-RUN if [ "$DEV" = "true" ]; then pip install -r /temp/requirements.dev.txt; fi
+RUN python -m venv /py && \
+    /py/bin/pip install --upgrade pip && \
+    apk add --upgrade --no-cache postgresql-client && \
+    apk add --update --no-cache --virtual .tmp-build-deps \
+        build-base postgresql-dev musl-dev && \
+    /py/bin/pip install -r /tmp/requirements.txt 
+
+
+RUN if [ "$DEV" = "true" ]; then /py/bin/pip install -r /tmp/requirements.dev.txt; fi
 
 
 # Clean up
-RUN rm -rf /tmp
+RUN rm -rf /tmp &&\
+    apk del .tmp-build-deps
 
 # Add a non-root user
 RUN adduser --disabled-password --no-create-home django-user
